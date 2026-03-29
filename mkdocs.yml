@@ -1,0 +1,71 @@
+site_name: IDAP - Integrated Drug Annotation Pipeline
+site_description: A modular evidence integration framework for precision oncology
+site_url: https://joonan-lab.github.io/IDAP-pipeline
+repo_url: https://github.com/joonan-lab/IDAP-pipeline
+repo_name: joonan-lab/IDAP-pipeline
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: teal
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: teal
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.sections
+    - navigation.expand
+    - content.code.copy
+    - toc.follow
+  icon:
+    repo: fontawesome/brands/github
+
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Installation: installation.md
+    - Quick Start: quickstart.md
+  - User Guide:
+    - Pipeline Overview: pipeline.md
+    - Modules:
+      - OncoKB Annotation: modules/oncokb.md
+      - PubMed Literature Mining: modules/pubmed.md
+      - TxGNN Knowledge Graph: modules/txgnn.md
+      - ClinicalTrials.gov: modules/clinicaltrials.md
+    - Scoring: scoring.md
+    - Output Format: output.md
+  - Examples:
+    - Single Sample: examples/single_sample.md
+    - Batch Analysis: examples/batch.md
+  - API Reference: api.md
+  - Citation: citation.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.tabbed:
+      alternate_style: true
+  - tables
+  - attr_list
+  - md_in_html
+  - toc:
+      permalink: true
+
+plugins:
+  - search
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/joonan-lab

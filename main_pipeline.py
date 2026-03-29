@@ -223,24 +223,18 @@ def merge_all_results(oncokb_df, pubmed_df, txgnn_df, clinical_summary_df):
         return level_score_map.get(str(level), 0.0)
     
     merged["oncokb_score"] = merged.apply(get_oncokb_score, axis=1)
-    
-    txgnn_score = merged["txgnn_score"].fillna(0) if "txgnn_score" in merged.columns else 0
-    pubmed_score = merged["mention_count"].fillna(0) if "mention_count" in merged.columns else 0
-    oncokb_score = merged["oncokb_score"].fillna(0)
-    
-    merged["combined_score"] = txgnn_score * 0.4 + pubmed_score * 0.3 + oncokb_score * 0.3
-    
+
+    # Evidence source tracking
     merged["source"] = ""
     if "txgnn_score" in merged.columns:
-        merged.loc[merged["txgnn_score"].notna(), "source"] += "TxGNN|"
+        merged.loc[merged["txgnn_score"].notna() & (merged["txgnn_score"] > 0), "source"] += "TxGNN|"
     if "mention_count" in merged.columns:
-        merged.loc[merged["mention_count"].notna(), "source"] += "PubMed|"
+        merged.loc[merged["mention_count"].notna() & (merged["mention_count"] > 0), "source"] += "PubMed|"
     if "oncokb_level" in merged.columns:
         merged.loc[merged["oncokb_level"].notna(), "source"] += "OncoKB|"
-    
     merged["source"] = merged["source"].str.rstrip("|")
-    merged = merged.sort_values("combined_score", ascending=False).reset_index(drop=True)
-    
+
+    # Attach clinical trial metadata before scoring
     if clinical_summary_df is not None and not clinical_summary_df.empty:
         clinical_summary_df["drug_norm"] = norm(clinical_summary_df["drug"])
         merged = merged.merge(
@@ -248,8 +242,39 @@ def merge_all_results(oncokb_df, pubmed_df, txgnn_df, clinical_summary_df):
             on="drug_norm",
             how="left"
         )
-    
-    merged = merged.sort_values("combined_score", ascending=False)
+
+    # --- Revised scale-aware combined score (percentile-normalized) ---
+    import numpy as np
+
+    tx_raw = merged["txgnn_score"].fillna(0) if "txgnn_score" in merged.columns else pd.Series(0, index=merged.index)
+    pm_raw = merged["mention_count"].fillna(0) if "mention_count" in merged.columns else pd.Series(0, index=merged.index)
+    ok_raw = merged["oncokb_score"].fillna(0)
+
+    # Within-sample percentile normalization
+    merged["tx_pct"] = tx_raw.rank(pct=True) if tx_raw.sum() > 0 else 0.0
+    merged["pm_pct"] = pm_raw.rank(pct=True) if pm_raw.sum() > 0 else 0.0
+    merged["ok_pct"] = ok_raw.rank(pct=True) if ok_raw.sum() > 0 else 0.0
+
+    # Support count: number of evidence layers with positive signal
+    has_tx = (merged["txgnn_score"].fillna(0) > 0).astype(int) if "txgnn_score" in merged.columns else 0
+    has_pm = (merged["mention_count"].fillna(0) > 0).astype(int) if "mention_count" in merged.columns else 0
+    has_ok = (ok_raw > 0).astype(int)
+    merged["support_count"] = has_tx + has_pm + has_ok
+
+    # Clinical trial flag
+    merged["clinical_flag"] = merged["n_clinical_trials"].notna().astype(int) if "n_clinical_trials" in merged.columns else 0
+
+    # Combined score formula (see manuscript Methods: Prioritization score definition)
+    merged["combined_score"] = (
+        0.50 * merged["tx_pct"]
+        + 0.40 * merged["pm_pct"]
+        + 0.10 * merged["ok_pct"]
+        + 0.20 * np.maximum(0, merged["support_count"] - 1)
+        + 0.30 * (ok_raw > 0).astype(float)
+        + 0.05 * merged["clinical_flag"]
+    )
+
+    merged = merged.sort_values("combined_score", ascending=False).reset_index(drop=True)
     return merged
 
 def build_summary_sheet(merged_df, maf_path, cancer_type):

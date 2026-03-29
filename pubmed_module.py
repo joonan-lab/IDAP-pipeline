@@ -1,13 +1,9 @@
+import os
 import requests
 import xml.etree.ElementTree as ET
 import pandas as pd
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from time import sleep
-
-# ==========================
-# 🔑 당신의 API Key 넣기
-# ==========================
-API_KEY = "0cec5c0eba93ea23dde7125a125a881c3009"
 
 # ==========================
 # 1. 약물 리스트 로드
@@ -47,7 +43,7 @@ def fetch_pubmed_abstracts(query, retmax=100, api_key=None):
         "db": "pubmed",
         "id": ",".join(id_list),
         "retmode": "xml",
-        "api_key": API_KEY
+        "api_key": api_key
     }
 
     try:
@@ -106,9 +102,12 @@ def process_gene(gene, cancer_type, drug_list, pubmed_token):
 # 6. 기존 run_pubmed() 완전 대체 (인터페이스 동일)
 # ==========================
 def run_pubmed(maf_path, cancer_type, output_path,
-               drug_list_path="/home/yebin/DrugAnno_Pipeline/project/data/chembl_anticancer_drugs.txt",
+               drug_list_path=None,
                max_workers=4,
                pubmed_token=None):
+
+    if drug_list_path is None:
+        drug_list_path = os.path.join(os.path.dirname(__file__), "data", "chembl_anticancer_drugs.txt")
 
     print("🔍 Loading drug list ...")
     drug_list = load_drug_list(drug_list_path)

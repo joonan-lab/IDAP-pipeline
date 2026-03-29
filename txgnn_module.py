@@ -6,7 +6,7 @@ import pandas as pd
 from typing import List
 from collections import defaultdict
 
-sys.path.append("./TxGNN")
+# TxGNN path is added dynamically via add_txgnn_to_path()
 
 # === TxGNN 패키지 경로를 동적으로 추가할 수 있게 변경 ===
 def add_txgnn_to_path(txgnn_root: str):
@@ -460,7 +460,7 @@ def run_txgnn(
     cancer_type: str,
     output_path: str,
     data_folder: str = "./data",
-    txgnn_root: str = "/home/yebin/DrugAnno_Pipeline/TxGNN",
+    txgnn_root: str = "./TxGNN",
     top_k: int = 50,
     mode: str = "repurposing"
 ) -> pd.DataFrame:
@@ -526,8 +526,8 @@ if __name__ == "__main__":
         maf_path="test.maf",
         cancer_type="lung cancer",
         output_path="txgnn_output.tsv",
-        data_folder="/home/yebin/DrugAnno_Pipeline/TxGNN/data",
-        txgnn_root="/home/yebin/DrugAnno_Pipeline/TxGNN",
+        data_folder="./data",
+        txgnn_root="./TxGNN",
         top_k=50,
         mode="repurposing"
     )

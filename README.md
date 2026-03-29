@@ -1,93 +1,74 @@
-# Readme
+# IDAP: Integrated Drug Annotation Pipeline
 
-# Introduction
+[![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://joonan-lab.github.io/IDAP-pipeline)
 
-IDAP presents a hybrid framework that integrates curated clinical knowledge, graph-based inference, and real-time literature mining to support precision drug recommendations and clinical decision-making for cancer patients.
+A modular evidence integration framework for precision oncology that combines curated knowledge, literature mining, graph-based drug prioritization, and clinical trial evidence to generate patient-level therapeutic hypothesis reports.
 
-The pipeline takes a MAF file as input and consists of three core modules:
+## Overview
 
-- **OncoKB** – Provides FDA-approved therapeutic options based on clinically actionable variants.
-- **PubMed Mining** – Performs real-time evidence retrieval from PubMed to identify drugs mentioned in studies relevant to the patient’s mutations and cancer type.
-- **TxGNN** – Utilizes the knowledge graph from the TxGNN drug-repurposing framework to recommend graph-inferred candidate drugs associated with the disease and mutated genes.
+IDAP takes a MAF file and cancer type as input and integrates four complementary evidence streams:
 
-Together, these modules enable an integrated, multi-source approach for variant-driven therapeutic prioritization.
+- **OncoKB** -- Curated variant-drug associations with clinical evidence levels
+- **PubMed** -- Literature-derived gene-drug mention counts from abstract-level text mining
+- **TxGNN Knowledge Graph** -- Graph-based drug prioritization using a biomedical knowledge graph with mutation-aware heuristic scoring
+- **ClinicalTrials.gov** -- Cancer-specific clinical trial metadata
 
-![image.png](./image.png)
+Candidate drugs are ranked using a percentile-normalized combined score that prevents cross-source scale imbalance and rewards convergent multi-source support.
+
+![Pipeline Overview](./image.png)
+
+## Documentation
+
+Full documentation is available at **[joonan-lab.github.io/IDAP-pipeline](https://joonan-lab.github.io/IDAP-pipeline)**
+
+## Quick Start
+
+```bash
+# Clone
+git clone https://github.com/joonan-lab/IDAP-pipeline.git
+cd IDAP-pipeline
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Clone required external modules
+git clone https://github.com/oncokb/oncokb-annotator.git
+git clone https://github.com/mims-harvard/TxGNN.git
 
 # Run
-
-### Preparation
-
-1. **Clone this repository**
-
-```bash
-git clone https://github.com/yebiniii/IDAP-pipeline.git
-```
-
-**2. Clone required external modules (OncoKB Annotator & TxGNN)**
-
-This pipeline depends on both OncoKB Annotator and TxGNN, so they must be cloned inside the IDAP-pipeline directory.
-
-```bash
-# oncokb annotator
-git clone https://github.com/oncokb/oncokb-annotator.git
-
-# txgnn
-git clone https://github.com/mims-harvard/TxGNN.git
-```
-
-**3. Obtain API keys (OncoKB and PubMed)**
-
-Both APIs are required to execute the pipeline:
-
-**OncoKB**
-
-You must apply for an API license. A brief research description is required.
-
-🔗 https://www.oncokb.org/api-access
-
-**PubMed**
-
-Log in to NCBI, open Account Settings, and generate your API Key. No special approval process is required.
-
-🔗 https://pubmed.ncbi.nlm.nih.gov/
-
-### Run the pipeline
-
-**Command-line Usage**
-
-```python
-usage: main_pipeline.py [-h] --maf MAF --cancer CANCER --oncokb_token ONCOKB_TOKEN --annotator ANNOTATOR 
-                        --txgnn_data TXGNN_DATA --txgnn_root TXGNN_ROOT [--pubmed_token PUBMED_TOKEN]
-                        [--outdir OUTDIR] [--patient_id PATIENT_ID]
-
-optional arguments:
-  -h, --help                Show help message and exit
-  --maf MAF                 Input MAF file
-  --cancer CANCER           Cancer type (e.g., NSCLC, breast cancer)
-  --oncokb_token ONCOKB_TOKEN
-                            OncoKB API token
-  --annotator ANNOTATOR     Path to MafAnnotator.py
-  --pubmed_token PUBMED_TOKEN
-                            PubMed API key
-  --txgnn_data TXGNN_DATA   Path to TxGNN data folder
-  --txgnn_root TXGNN_ROOT   Path to TxGNN root folder
-  --outdir OUTDIR           Output directory
-  --patient_id PATIENT_ID   Optional patient identifier
-```
-
-**Example Execution**
-
-```python
-pwd  # ~/IDAP-pipeline
-
 python main_pipeline.py \
-    --maf ./data/test_NSCLC.maf \
-    --cancer "lung cancer" \
-    --oncokb_token <your_oncokb_token> \
+    --maf data/test_NSCLC.maf \
+    --cancer NSCLC \
+    --oncokb_token $ONCOKB_TOKEN \
     --annotator ./oncokb-annotator/MafAnnotator.py \
-    --pubmed_token <your_pubmed_token> \
+    --pubmed_token $PUBMED_TOKEN \
     --txgnn_data ./TxGNN/data \
     --txgnn_root ./TxGNN \
-    --outdir ./test
+    --outdir output/test
 ```
+
+## API Keys
+
+| Service | How to obtain |
+|---------|---------------|
+| OncoKB | [oncokb.org/api-access](https://www.oncokb.org/api-access) (free for research) |
+| PubMed | [NCBI Account Settings](https://www.ncbi.nlm.nih.gov/account/settings/) |
+
+## Output
+
+IDAP generates per-patient reports including:
+
+- `final_report.xlsx` -- Excel workbook with per-module results and merged drug ranking
+- `final_report.pdf` -- PDF summary with visualizations
+- `top20_drugs.png` -- Bar chart of top-ranked drugs
+- `txgnn_graph.png` -- Gene-drug network visualization
+
+See [Output Format](https://joonan-lab.github.io/IDAP-pipeline/output/) for details.
+
+## Citation
+
+> Ryu Y, Jung H, An JY. IDAP: An integrated literature- and knowledge-graph-driven evidence prioritization pipeline for precision oncology. *Bioinformatics* (2026).
+
+## License
+
+This project is available for academic and research use.
