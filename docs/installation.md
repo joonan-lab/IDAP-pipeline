@@ -2,7 +2,7 @@
 
 ## Requirements
 
-- Python 3.8+
+- Python 3.8-3.11 (recommended for TxGNN/DGL compatibility)
 - [OncoKB API token](https://www.oncokb.org/api-access) (free for research use)
 - [NCBI PubMed API key](https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/) (recommended)
 
@@ -36,8 +36,8 @@ The main dependencies are listed in `requirements.txt`:
 The TxGNN module requires the TxGNN package and its associated data:
 
 ```bash
-# Install TxGNN
-pip install txgnn
+# Installed by requirements.txt from the official GitHub repository
+pip install -r requirements.txt
 
 # Or clone from source
 git clone https://github.com/mims-harvard/TxGNN.git
